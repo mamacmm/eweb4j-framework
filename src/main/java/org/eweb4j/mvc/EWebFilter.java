@@ -3,6 +3,11 @@ package org.eweb4j.mvc;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URLDecoder;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -25,7 +30,9 @@ import org.eweb4j.mvc.action.ActionExecution;
 import org.eweb4j.mvc.config.ActionConfig;
 import org.eweb4j.mvc.config.MVCConfigConstant;
 import org.eweb4j.mvc.interceptor.InterExecution;
+import org.eweb4j.mvc.upload.UploadFile;
 import org.eweb4j.util.CommonUtil;
+import org.eweb4j.util.FileUtil;
 
 /**
  * eweb4j.MVC filter
@@ -81,7 +88,16 @@ public class EWebFilter implements Filter, Servlet {
 		request.setCharacterEncoding("utf-8");
 		response.setCharacterEncoding("utf-8");
 		response.setContentType("text/html");
-		return new Context(servletContext, request, response, null, null, null, null);
+		Context context = new Context(servletContext, request, response, null, null, null, null);
+		// 将request的请求参数转到另外一个map中去
+		Map<String, String[]> qpMap = new HashMap<String, String[]>();
+		qpMap.putAll(ParamUtil.copyReqParams(context.getRequest()));
+		context.setQueryParamMap(qpMap);
+		
+		//将上传的表单元素注入到context中
+		ParamUtil.handleUpload(context);
+		
+		return context;
 	}
 
 	/**
@@ -90,18 +106,18 @@ public class EWebFilter implements Filter, Servlet {
 	public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
 		HttpServletRequest request = (HttpServletRequest) req;
 		HttpServletResponse response = (HttpServletResponse) res;
+		Context context = null;
 		try {
-			Context context = this.initContext(request, response);// 1 初始化环境
-			
-			MVC.getThreadLocal().set(context);// 最主要的还是提供给 org.eweb4j.i18n.Lang.java 类使用
-			
 			String err = EWeb4JConfig.start(ConfigConstant.START_FILE_NAME);// 2
-																			// 启动eweb4j
+			// 启动eweb4j
 			if (err != null) {
 				this.printHtml(err, res.getWriter());
 				return;
 			}
 
+			context = this.initContext(request, response);// 1 初始化环境
+			MVC.getThreadLocal().set(context);// 最主要的还是提供给 org.eweb4j.i18n.Lang.java 类使用
+			
 			Lang.change(request.getLocale());// 设置国际化语言
 			
 			String uri = this.parseURL(request);// 3.URI解析
@@ -112,8 +128,8 @@ public class EWebFilter implements Filter, Servlet {
 
 			String reqMethod = this.parseMethod(request);// HTTP Method 解析
 			context.setHttpMethod(reqMethod);
-
-			InterExecution before_interExe = new InterExecution("before", context);// 4.前置拦截器
+			
+			InterExecution before_interExe = new InterExecution("before", context);// 4.外部前置拦截器
 			if (before_interExe.findAndExecuteInter()) {
 				before_interExe.showErr();
 				return;
@@ -125,7 +141,7 @@ public class EWebFilter implements Filter, Servlet {
 				actionExe.execute();// 5.execute the action
 				return;
 			}
-
+			
 			this.normalReqLog(uri);// log
 			chain.doFilter(req, res);// chain
 		} catch (Exception e) {
@@ -133,6 +149,18 @@ public class EWebFilter implements Filter, Servlet {
 			String info = CommonUtil.getExceptionString(e);
 			LogFactory.getMVCLogger(EWebFilter.class).error(info);
 			this.printHtml(info, res.getWriter());
+		}finally{
+			// 清空临时文件
+			if (context != null && !context.getUploadMap().isEmpty())
+				for (Iterator<Entry<String, List<UploadFile>>> it = context.getUploadMap().entrySet().iterator(); it.hasNext(); ){
+					Entry<String, List<UploadFile>> en = it.next();
+					if (en.getValue() == null)
+						continue;
+					
+					for (UploadFile f : en.getValue()){
+						FileUtil.deleteFile(f.getTmpFile());
+				}
+			}
 		}
 	}
 

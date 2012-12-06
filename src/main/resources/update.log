@@ -618,7 +618,7 @@ class Controller{
 (35) 完善生成建表脚本（使其支持多对多的第三方表）
 
 1.9.1 2012-08-27
-(1) bug fixed: IOC.createBean 当使用构造器方法注入依赖时，必须要提供一个无参构造器方法进行初始化，否则会报错。修复为无需提供无参构造器方法。
+(1) bug fix: IOC.createBean 当使用构造器方法注入依赖时，必须要提供一个无参构造器方法进行初始化，否则会报错。修复为无需提供无参构造器方法。
 package test;
 public class Pojo{
     public Pojo(String name){
@@ -632,3 +632,30 @@ ioc.xml
     <inject ref="Const" name="" type="string" value="weiwei"/>
 </ioc>
 (2) feature: 为IOCConfig添加IOCConfig.createIOCXml("ioc.xml", icb);方法用来创建配置文件。
+(3) bug fix: 重构IOC模块, 修复了 POJO依赖了另外POJO导致的注入失败问题。
+(4) feature: DAOConfig 添加了一个实用方法，用来创建数据库连接配置文件。 DAOConfig.createDBXml(path, DBInfoConfigBean)
+(5) feature: 增强了各个模块对ClassPath的扫描功能，包括扫描Maven依赖库
+(6) feature: 改善了对JAR包的扫描，上一版本是暴力扫描所有JAR文件，这一版本改为增加扫描JAR文件的配置，通过不同的配置来扫描不同的JAR文件，以下为例子：
+    <scanPojoPackage>
+        <path>JAR:apache*</path><!--扫描命名以apache开头的JAR包-->
+    </scanPojoPackage>
+(7) feature: 将ORM模块所有对List接口的依赖改成Collection接口
+(8) feature: 修改生成SQL脚本实体字段的nullable默认设置，由原来的not null改成 null
+(9) feature: 为ORM模块增加ddl配置功能，通过ddl可以配置框架启动的时候创建SQL脚本和运行SQL脚本，常用到建表。
+    <ddl generate="true" run="true" ds="myDBInfo"/>
+(10)feature: DAO接口增加join、alaias、ennableExpress、getPage等方法。随之带来的新功能是：多表连接查询、新的更加强大的分页功能。
+(11)feature: MVC增加对Velocity模板的支持
+(12)bug fix: 修复拦截器bug
+(13)feature: 增加 FTPUtil 和 ThumbUtil两个实用工具类，后者支持远程、本地图片的处理，包括等比压缩、中心裁剪、亮度/对比度调节、锐化调节等。
+(14)feature: 改善，修该级联接口的 merge方法为fetch
+(15)feature: 改善，重构ORM的表关系相关的级联接口，使其支持更多的JPA注解，包括@OrderBy、@MappedBy、 还有fetchType。
+(16)feature: 改善，使得ORM模块实体类不用必须提供@Id属性，这样就可以支持查询视图。
+(17)feature：改善，增加对JPA @JoinColumn(referenceColumnName)的支持，使得表关系的外键可以映射到非ID字段。
+(18)feature：MVC增加对上传文件的验证配置。只要在上传处理方法添加@Upload注解，可以填写限制的后缀名、文件大小等参数。
+(19)feature: 增加Models帮助类，实现了类似 ActiveRecord 功能。
+
+1.9.2 2012-12-1
+(1) bug fix: IOC ref 引用问题导致获取bean失败
+(2) bug fix: ThumbUtil 当给定outputWidth和outputHeight的图片的时候有些情况裁剪范围不正确。
+(3) bug fix: 有些时候 properties 文件的${}变量引用没有被渲染出来
+(4) feature: 给 properties 增加嵌套变量引用。 key1=${key2}_iamkey1 key2=${key3}_iamkey2 key3=iamkey3 

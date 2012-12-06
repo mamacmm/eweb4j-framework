@@ -44,6 +44,7 @@ public class Pet extends Model<Pet> {
 	private Master master;
 	
 	@ManyToOne
+	@JoinColumn(name="user_id", referencedColumnName="id")
 	private User user;
 	
 	public String getNumber() {

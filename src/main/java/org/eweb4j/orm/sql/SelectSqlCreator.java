@@ -194,7 +194,8 @@ public class SelectSqlCreator<T> {
 								joinColAnn = f.getAnnotation(JoinColumn.class);
 							
 							if (joinColAnn != null && joinColAnn.referencedColumnName().trim().length() > 0){
-								String refField = joinColAnn.referencedColumnName();
+								String refCol = joinColAnn.referencedColumnName();
+								String refField = ORMConfigBeanUtil.getColumn(_value.getClass(), refCol);
 								ReflectUtil tarRu = new ReflectUtil(_value);
 								Method tarFKGetter = tarRu.getGetter(refField);
 								
@@ -202,8 +203,10 @@ public class SelectSqlCreator<T> {
 							}else{
 								ReflectUtil tarRu = new ReflectUtil(_value);
 								String tarFKField = ORMConfigBeanUtil.getIdField(_value.getClass());
-								Method tarFKGetter = tarRu.getGetter(tarFKField);
-								value = tarFKGetter.invoke(_value);
+								if (tarFKField != null){
+									Method tarFKGetter = tarRu.getGetter(tarFKField);
+									value = tarFKGetter.invoke(_value);
+								}
 							}
 						}
 						
@@ -689,23 +692,17 @@ public class SelectSqlCreator<T> {
 					"do not support dataBase. only mysql | mssql");
 	}
 
-	/**
-	 * 
-	 * @param currPage
-	 * @param numPerPage
-	 * @param orderField
-	 * @param oType
-	 * @param condition
-	 * @return
-	 * @throws SqlCreateException
-	 */
 	public String divPage(int currPage, int numPerPage, String orderField, int oType, String condition) throws SqlCreateException {
+		return this.divPage(currPage, numPerPage, orderField, clazz, oType, condition);
+	}
+	
+	public String divPage(int currPage, int numPerPage, String orderField, Class<?> orderFieldCls, int oType, String condition) throws SqlCreateException {
 		String sql = null;
 		if (orderField == null) {
 			orderField = idColumn;
 			orderField = OrderColumnUtil.getOrderColumn(orderField, dbType);
 		} else {
-			orderField = ORMConfigBeanUtil.getColumn(clazz, orderField);
+			orderField = ORMConfigBeanUtil.getColumn(orderFieldCls, orderField);
 		}
 
 		String orderType = OrderType.ASC_ORDER == oType ? "ASC" : "DESC";

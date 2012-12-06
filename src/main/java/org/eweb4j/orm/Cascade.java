@@ -5,9 +5,9 @@ package org.eweb4j.orm;
  * @author weiwei
  *
  */
-public interface Cascade {
+public interface Cascade<T> {
 
-	void fetch(String... fields);
+	T fetch(String... fields);
 	
 	void refresh(long newIdVal, String... fields);
 	

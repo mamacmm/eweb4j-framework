@@ -143,11 +143,10 @@ public class RowMapping {
 							Field field = ru.getField(p.getName());
 							Class<?> tarClass = field.getType();
 
-							String tarFKField = null;
-							
-							tarFKField = p.getRelProperty();
+							String refField = p.getRelProperty();
 							Object tarObj = tarClass.newInstance();
-							tarObj = ClassUtil.injectFieldValue(tarObj,tarFKField, new String[] { v });
+							
+							tarObj = ClassUtil.injectFieldValue(tarObj, refField, new String[] { v });
 							
 							m.invoke(t, tarObj);
 

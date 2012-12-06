@@ -46,8 +46,8 @@ public class Model<T>{
 	/**
 	 * 根据当前实体ID值去查询数据库
 	 */
-	public T load() {
-		return this.helper.load();
+	public void load() {
+		this.helper.load();
 	}
 
 	public int delete(String query, Object... params) {

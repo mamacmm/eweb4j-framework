@@ -108,20 +108,20 @@ public class ClassUtil {
 		if (f == null)
 			return pojo;
 
-		Method m = ru.getSetter(fieldName);
-		if (m == null)
+		Method setter = ru.getSetter(fieldName);
+		if (setter == null)
 			return pojo;
 
 		Class<?> clazz = f.getType();
-
+		
 		if (Object[].class.isAssignableFrom(clazz)) {
 			Object obj = getParamVals(clazz, vs);
 			if (obj != null)
-				m.invoke(pojo, new Object[] { obj });
+				setter.invoke(pojo, new Object[] { obj });
 		} else {
 			Object obj = getParamVal(clazz, vs[0]);
 			if (obj != null)
-				m.invoke(pojo, obj);
+				setter.invoke(pojo, obj);
 		}
 		return pojo;
 	}

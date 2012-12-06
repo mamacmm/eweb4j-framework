@@ -22,5 +22,10 @@ public class TestProps {
 	@Test
 	public void testVarable() throws Exception{
 		Assert.assertEquals("eweb4j/hello", Props.get("TEST"));
+		//测试变量嵌套引用
+		Assert.assertEquals("FUCK!", Props.get("K4"));
+		Assert.assertEquals("FUCK!+3", Props.get("K3"));
+		Assert.assertEquals("FUCK!+3+2", Props.get("K2"));
+		Assert.assertEquals("FUCK!+3+2+1", Props.get("K1"));
 	}
 }

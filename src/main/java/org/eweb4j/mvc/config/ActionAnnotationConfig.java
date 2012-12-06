@@ -555,4 +555,10 @@ public class ActionAnnotationConfig extends ScanPackage{
 		return uriMapping;
 	}
 
+	@Override
+	protected void onOk() throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

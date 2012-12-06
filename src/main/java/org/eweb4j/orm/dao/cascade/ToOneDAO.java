@@ -44,16 +44,18 @@ public class ToOneDAO {
 		this.idField = ORMConfigBeanUtil.getIdField(this.t.getClass());
 		this.idColumn = ORMConfigBeanUtil.getIdColumn(this.t.getClass());
 		this.idGetter = ru.getGetter(idField);
-		if (idGetter == null)
-			throw new DAOException("can not find idGetter.", null);
+//		if (idGetter == null)
+//			throw new DAOException("can not find idGetter.", null);
 
 		Object idVal;
-		try {
-			idVal = idGetter.invoke(this.t);
-			this.idVal = idVal == null ? null : String.valueOf(idVal);
-		} catch (Exception e) {
-
-			throw new DAOException("", e);
+		if (idGetter != null) {
+			try {
+				idVal = idGetter.invoke(this.t);
+				this.idVal = idVal == null ? null : String.valueOf(idVal);
+			} catch (Exception e) {
+	
+				throw new DAOException("", e);
+			}
 		}
 	}
 
@@ -171,7 +173,7 @@ public class ToOneDAO {
 				if (moAn == null)
 					continue;
 			}
-			String referencedColumn = null;
+			String refCol = null;
 			JoinColumn joinCol = f.getAnnotation(JoinColumn.class);
 			if (joinCol == null)
 				joinCol = tarGetter.getAnnotation(JoinColumn.class);
@@ -180,24 +182,24 @@ public class ToOneDAO {
 				fk = f.getName()+"_id";
 			else{	
 				fk = joinCol.name();
-				referencedColumn = joinCol.referencedColumnName();
+				refCol = joinCol.referencedColumnName();
 			}
 			
 			Class<?> tarClass = f.getType();
 			
-			if (referencedColumn == null || referencedColumn.trim().length() == 0)
-				referencedColumn = ORMConfigBeanUtil.getIdColumn(tarClass);
+			if (refCol == null || refCol.trim().length() == 0)
+				refCol = ORMConfigBeanUtil.getIdColumn(tarClass);
 			
-			String tarFKField = ORMConfigBeanUtil.getField(tarClass, referencedColumn);
+			String refField = ORMConfigBeanUtil.getField(tarClass, refCol);
 
 			try {
 				Object _tarObj = tarGetter.invoke(t);
 				Object tarObj = null;
 				boolean flag = false;
 				if (_tarObj != null) {
-					Method tarFKFieldGetter = new ReflectUtil(_tarObj).getGetter(tarFKField);
-					if (tarFKFieldGetter != null && tarFKFieldGetter.invoke(_tarObj) != null)
-						tarObj = DAOFactory.getSelectDAO(dsName).selectOne(_tarObj, tarFKField);
+					Method refFieldGetter = new ReflectUtil(_tarObj).getGetter(refField);
+					if (refFieldGetter != null && refFieldGetter.invoke(_tarObj) != null)
+						tarObj = DAOFactory.getSelectDAO(dsName).selectOne(_tarObj, refField);
 					else
 						flag = true;
 				} else
@@ -209,7 +211,7 @@ public class ToOneDAO {
 					String tarTable = ORMConfigBeanUtil.getTable(tarClass, true);
 					
 					
-					String sql = String.format(format,ORMConfigBeanUtil.getSelectAllColumn(tarClass),tarTable, referencedColumn, fk, table, idColumn,idVal);
+					String sql = String.format(format,ORMConfigBeanUtil.getSelectAllColumn(tarClass),tarTable, refCol, fk, table, idColumn,idVal);
 					List<?> tarList = DAOFactory.getSelectDAO(dsName).selectBySQL(tarClass, sql);
 					if (tarList == null || tarList.size() == 0)
 						continue;

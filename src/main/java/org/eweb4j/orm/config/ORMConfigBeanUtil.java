@@ -106,6 +106,9 @@ public class ORMConfigBeanUtil {
 			return map.get("idValue");
 		}
 		String _idField = ORMConfigBeanUtil.getIdField(_t.getClass());
+		if (_idField == null)
+			return null;
+		
 		ReflectUtil _ru = new ReflectUtil(_t);
 		Method _idGetter = _ru.getGetter(_idField);
 		return _idGetter.invoke(_t);
@@ -150,10 +153,9 @@ public class ORMConfigBeanUtil {
 			return (String) map.get("idColumn");
 		}
 
-		String pk = "id";
 		ORMConfigBean ormBean = ORMConfigBeanCache.get(clazz.getName());
 		if (ormBean == null)
-			return pk;
+			return null;
 
 		for (Property property : ormBean.getProperty()) {
 			if (("true".equals(property.getPk()) || "1"
@@ -161,15 +163,15 @@ public class ORMConfigBeanUtil {
 					&& ("true".equals(property.getAutoIncrement()) || "1"
 							.equals(property.getAutoIncrement()))) {
 				if (1 == type)
-					pk = property.getColumn();
+					return property.getColumn();
 				else if (2 == type)
-					pk = property.getName();
+					return property.getName();
 
 				break;
 			}
 		}
 
-		return pk;
+		return null;
 	}
 
 	public static <T> String getTable(T t) {

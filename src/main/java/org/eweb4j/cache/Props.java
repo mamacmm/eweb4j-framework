@@ -7,14 +7,19 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eweb4j.config.ConfigConstant;
 import org.eweb4j.config.Log;
@@ -24,9 +29,9 @@ import org.eweb4j.config.bean.I18N;
 import org.eweb4j.config.bean.Locale;
 import org.eweb4j.config.bean.Prop;
 import org.eweb4j.i18n.Lang;
+import org.eweb4j.util.CommonUtil;
 import org.eweb4j.util.FileUtil;
 import org.eweb4j.util.RegexList;
-import org.eweb4j.util.CommonUtil;
 
 @SuppressWarnings("all")
 public class Props {
@@ -197,17 +202,17 @@ public class Props {
 		try {
 			in = new BufferedInputStream(new FileInputStream(filePath));
 			properties.load(in);
-			Enumeration<?> en = properties.propertyNames();
-			while (en.hasMoreElements()) {
-				String key = (String) en.nextElement();
-				String property = properties.getProperty(key);
-				if (!property.matches(RegexList.has_chinese_regexp)) {
-					property = new String(property.getBytes("ISO-8859-1"), "UTF-8");
-				}
+			
+			//第一遍全部加进来
+			Props.loadProperty(properties, tmpHt);
 
-				key = CommonUtil.parseSingleProp(key, tmpHt);
-				property = CommonUtil.parseSingleProp(property, tmpHt);
-				tmpHt.put(key, property);
+			//渲染 ${} 引用值
+			Pattern pattern = Pattern.compile(RegexList.property_single_regexp);
+			for (Iterator<Entry<String, String>> it = tmpHt.entrySet().iterator(); it.hasNext();) {
+				Entry<String, String> e = it.next();
+				String key = e.getKey();
+				String property = e.getValue();
+				Props.renderVarable(pattern, key, property, tmpHt);
 			}
 
 			if ("true".equalsIgnoreCase(global) || "1".equalsIgnoreCase(global)) {
@@ -238,6 +243,41 @@ public class Props {
 
 		return error;
 
+	}
+	
+	/**
+	 * 递归渲染${}变量
+	 * TODO
+	 * @date 2012-12-5 下午08:04:35
+	 */
+	private static String renderVarable(Pattern pattern, String key, String property, Map<String,String> tmpHt){
+		Matcher matcher = pattern.matcher(property);
+		if (matcher.find()) {
+			String g = matcher.group();
+			String _key = g.replace("${", "").replace("}", "");
+			String value = tmpHt.get(_key);
+			String result = renderVarable(pattern, _key, value, tmpHt);
+			if (result == null)
+				tmpHt.put(key, property.replace(g, tmpHt.get(_key)));
+		}
+		
+		return null;
+	}
+
+	private static void loadProperty(Properties properties, Hashtable<String, String> tmpHt) throws UnsupportedEncodingException {
+		Enumeration<?> en = properties.propertyNames();
+		
+		while (en.hasMoreElements()) {
+			String key = (String) en.nextElement();
+			String property = properties.getProperty(key);
+			if (property == null)
+				continue;
+			
+			if (!property.matches(RegexList.has_chinese_regexp)) {
+				property = new String(property.getBytes("ISO-8859-1"), "UTF-8");
+			}
+			tmpHt.put(key, property);
+		}
 	}
 
 	public synchronized static void writeProp(String propId, String key,

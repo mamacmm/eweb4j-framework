@@ -79,15 +79,15 @@ public class ModelHelper<T> implements IModel<T>{
 	/**
 	 * 根据当前实体ID值去查询数据库
 	 */
-	public T load() {
+	public void load() {
 		Long id = _getId();
 		if (id == null || id <= 0)
-			return this.model;
+			return ;
 
 		ReflectUtil ru = new ReflectUtil(this.model);
 		T _model = DAOFactory.getSelectDAO(this.dsName).selectOneById(this.model);
 		if (_model == null)
-			return this.model;
+			return ;
 
 		ReflectUtil _ru = new ReflectUtil(_model);
 		for (String field : ru.getFieldsName()) {
@@ -110,8 +110,6 @@ public class ModelHelper<T> implements IModel<T>{
 		final String[] fields = ORMConfigBeanUtil.getToOneField(this.model.getClass());
 		if (fields != null && fields.length > 0)
 			DAOFactory.getCascadeDAO(this.dsName).select(this.model, fields);
-		
-		return this.model;
 	}
 
 	public int delete(String query, Object... params) {
@@ -170,7 +168,10 @@ public class ModelHelper<T> implements IModel<T>{
 
 	public Long _getId() {
 		try {
-			return (Long) ORMConfigBeanUtil.getIdVal(model);
+			Object _id = ORMConfigBeanUtil.getIdVal(model);
+			if (_id == null)
+				return null;
+			return (Long)_id ;
 		} catch (Exception e) {
 			e.printStackTrace();
 		} 
@@ -180,6 +181,8 @@ public class ModelHelper<T> implements IModel<T>{
 
 	public void _setId(long id) {
 		String idField = ORMConfigBeanUtil.getIdField(model);
+		if (idField == null)
+			return ;
 		try {
 			ru.getSetter(idField).invoke(model, id);
 		} catch (Exception e) {

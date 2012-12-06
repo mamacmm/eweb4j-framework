@@ -91,8 +91,10 @@ public class InsertSqlCreator<T> {
 								}else{
 									ReflectUtil tarRu = new ReflectUtil(_value);
 									String tarFKField = ORMConfigBeanUtil.getIdField(_value.getClass());
-									Method tarFKGetter = tarRu.getGetter(tarFKField);
-									value = tarFKGetter.invoke(_value);
+									if (tarFKField != null){
+										Method tarFKGetter = tarRu.getGetter(tarFKField);
+										value = tarFKGetter.invoke(_value);
+									}
 								}
 							}
 							
@@ -222,15 +224,18 @@ public class InsertSqlCreator<T> {
 									joinColAnn = f.getAnnotation(JoinColumn.class);
 								
 								if (joinColAnn != null && joinColAnn.referencedColumnName().trim().length() > 0){
-									String refField = joinColAnn.referencedColumnName();
+									String refCol = joinColAnn.referencedColumnName();
+									String refField = ORMConfigBeanUtil.getField(_value.getClass(), refCol);
 									ReflectUtil tarRu = new ReflectUtil(_value);
 									Method tarFKGetter = tarRu.getGetter(refField);
 									value = tarFKGetter.invoke(_value);
 								}else{
 									ReflectUtil tarRu = new ReflectUtil(_value);
 									String tarFKField = ORMConfigBeanUtil.getIdField(_value.getClass());
-									Method tarFKGetter = tarRu.getGetter(tarFKField);
-									value = tarFKGetter.invoke(_value);
+									if (tarFKField != null){
+										Method tarFKGetter = tarRu.getGetter(tarFKField);
+										value = tarFKGetter.invoke(_value);
+									}
 								}
 							}
 							

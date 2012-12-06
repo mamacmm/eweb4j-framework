@@ -78,4 +78,10 @@ public class InterceptorAnnotationConfig extends ScanPackage{
 		
 		return true;
 	}
+
+	@Override
+	protected void onOk() throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
 }

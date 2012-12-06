@@ -2,7 +2,7 @@ package org.eweb4j.orm;
 
 import org.eweb4j.orm.dao.cascade.CascadeDAO;
 
-public class CascadeImpl<T> implements Cascade{
+public class CascadeImpl<T> implements Cascade<T>{
 
 	private CascadeDAO cascadeDAO;
 	private T model;
@@ -12,8 +12,9 @@ public class CascadeImpl<T> implements Cascade{
 		this.model = model;
 	}
 	
-	public void fetch(String... fields) {
+	public T fetch(String... fields) {
 		this.cascadeDAO.select(model, fields);
+		return model;
 	}
 
 	public void refresh(long newIdVal, String... fields) {

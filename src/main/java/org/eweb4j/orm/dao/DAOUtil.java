@@ -31,7 +31,10 @@ public class DAOUtil {
 			idColumn = ORMConfigBeanUtil.getIdColumn(clazz);
 			table = ORMConfigBeanUtil.getTable(clazz, true);
 		}
-
+		
+		if (idColumn == null)
+			return 0;
+		
 		idColumn = OrderColumnUtil.getOrderColumn(idColumn, dbType);
 		String format = "select max(%s) from %s ";
 		String sql = String.format(format, idColumn, table);

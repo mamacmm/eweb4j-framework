@@ -22,7 +22,7 @@ public interface IModel<T> {
 	/**
 	 * 根据当前实体ID值去查询数据库
 	 */
-	public T load() ;
+	public void load() ;
 
 	public int delete(String query, Object... params) ;
 

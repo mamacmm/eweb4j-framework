@@ -4,7 +4,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -195,7 +197,6 @@ public class PojoAnnotationConfig extends ScanPackage {
 				p.setAutoIncrement("1");
 				p.setPk("1");
 				p.setSize("20");
-
 			}
 
 			Column colAnn = getter.getAnnotation(Column.class);
@@ -242,79 +243,15 @@ public class PojoAnnotationConfig extends ScanPackage {
 					 else 
 						p.setColumn(f.getName() + "_id");
 					
-					String relProperty = null;
-					if (joinColumn != null && joinColumn.referencedColumnName().trim().length() > 0){
-						relProperty = joinColumn.referencedColumnName();
-					}else
-						relProperty = ORMConfigBeanUtil.getIdField(f.getType());
+					String refCol = null;
+					if (joinColumn != null && joinColumn.referencedColumnName().trim().length() > 0)
+						refCol = joinColumn.referencedColumnName();
 					
-					p.setRelProperty(relProperty);
+					p.setRelProperty(ORMConfigBeanUtil.getField(f.getType(), refCol));
 					p.setRelClass(f.getType());
 					p.setSize("20");
 				}
 
-//				ManyToOne manyOneAnn = getter.getAnnotation(ManyToOne.class);
-//				if (manyOneAnn == null)
-//					manyOneAnn = f.getAnnotation(ManyToOne.class);
-//
-//				if (manyOneAnn != null) {
-//					ReflectUtil _ru;
-//					try {
-//						_ru = new ReflectUtil(f.getType());
-//
-//						for (Field _f : _ru.getFields()) {
-//							String _name = _f.getName();
-//							Method _getter = ru.getGetter(_name);
-//							if (getter == null)
-//								continue;
-//
-//							OneToMany oneManyAnn = _getter.getAnnotation(OneToMany.class);
-//							if (oneManyAnn == null)
-//								oneManyAnn = f.getAnnotation(OneToMany.class);
-//							
-//							if (oneManyAnn == null)
-//								continue;
-//							
-//							if (!ClassUtil.isListClass(_f))
-//								continue;
-//							
-//							Class<?> _targetClass = ClassUtil.getGenericType(_f);
-//							if (!clazz.getName().equals(_targetClass.getName()))
-//								continue;
-//
-//							String relProperty = oneManyAnn.mappedBy();
-//							if (relProperty == null
-//									|| relProperty.trim().length() == 0)
-//								relProperty = ORMConfigBeanUtil.getIdField(_f
-//										.getType());
-//
-//							p.setRelProperty(relProperty);
-//
-//							break;
-//						}
-//					} catch (Exception e) {
-//					}
-
-//					p.setRelClass(f.getType());
-//					
-//					p.setSize("20");
-//					JoinColumn col = getter.getAnnotation(JoinColumn.class);
-//					if (col == null)
-//						col = f.getAnnotation(JoinColumn.class);
-//
-//					if (col == null) {
-//						p.setColumn(f.getName() + "_id");
-//					} else {
-//						if (col.name().trim().length() == 0) {
-//							String refCol = col.referencedColumnName();
-//							if (refCol == null || refCol.trim().length() == 0)
-//								p.setColumn(f.getName() + "_id");
-//							else
-//								p.setColumn(f.getName() + "_" + refCol);
-//						} else
-//							p.setColumn(col.name());
-//					}
-//				}
 			}
 
 			result.add(p);
@@ -337,5 +274,33 @@ public class PojoAnnotationConfig extends ScanPackage {
 		}
 		
 		return clazz;
+	}
+
+	@Override
+	protected void onOk() throws Exception {
+		for (Iterator<Entry<Object, ORMConfigBean>> it = ORMConfigBeanCache.entrySet().iterator(); it.hasNext(); ){
+			Entry<Object, ORMConfigBean> e = it.next();
+			ORMConfigBean orm = e.getValue();
+			Class<?> clazz = null;
+			ReflectUtil ru = null;
+			for (Property p : orm.getProperty()){
+				String type = p.getType();
+				if (!PropType.ONE_ONE.equals(type) && !PropType.MANY_ONE.equals(type))
+					continue;
+				
+				if (p.getRelProperty() != null)
+					continue;
+				
+				if (clazz == null)
+					clazz = Class.forName(orm.getClazz());
+				if (ru == null)
+					ru = new ReflectUtil(clazz);
+				
+				Field f = ru.getField(p.getName());
+				String refCol = ORMConfigBeanUtil.getIdColumn(f.getType());
+				
+				p.setRelProperty(ORMConfigBeanUtil.getField(f.getType(), refCol));
+			}
+		}
 	}
 }

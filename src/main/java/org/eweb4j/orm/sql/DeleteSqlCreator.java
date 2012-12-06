@@ -98,18 +98,20 @@ public class DeleteSqlCreator<T> {
 			idValue = map.get("idValue");
 		} else {
 			idField = ORMConfigBeanUtil.getIdField(clazz);
-			table = ORMConfigBeanUtil.getTable(clazz, false);
 			idColumn = ORMConfigBeanUtil.getIdColumn(clazz);
+			
+			table = ORMConfigBeanUtil.getTable(clazz, false);
 			ReflectUtil ru = new ReflectUtil(t);
-			Method method = ru.getGetter(idField);
-			if (method == null) {
-				throw new SqlCreateException("can not find id getter.");
-			}
-
-			try {
-				idValue = method.invoke(t);
-			} catch (Exception e) {
-				throw new SqlCreateException(method + " invoke exception " + e.toString(), e);
+			Method idGetter = ru.getGetter(idField);
+//			if (idGetter == null) {
+//				throw new SqlCreateException("can not find id getter.");
+//			}
+			if (idGetter != null) {
+				try {
+					idValue = idGetter.invoke(t);
+				} catch (Exception e) {
+					throw new SqlCreateException(idGetter + " invoke exception " + e.toString(), e);
+				}
 			}
 		}
 
@@ -181,15 +183,18 @@ public class DeleteSqlCreator<T> {
 							joinColAnn = f.getAnnotation(JoinColumn.class);
 						
 						if (joinColAnn != null && joinColAnn.referencedColumnName().trim().length() > 0){
-							String refField = joinColAnn.referencedColumnName();
+							String refCol = joinColAnn.referencedColumnName();
+							String refField = ORMConfigBeanUtil.getColumn(_value.getClass(), refCol);
 							ReflectUtil tarRu = new ReflectUtil(_value);
 							Method tarFKGetter = tarRu.getGetter(refField);
 							value = tarFKGetter.invoke(_value);
 						}else{
 							ReflectUtil tarRu = new ReflectUtil(_value);
 							String tarFKField = ORMConfigBeanUtil.getIdField(_value.getClass());
-							Method tarFKGetter = tarRu.getGetter(tarFKField);
-							value = tarFKGetter.invoke(_value);
+							if (tarFKField != null){
+								Method tarFKGetter = tarRu.getGetter(tarFKField);
+								value = tarFKGetter.invoke(_value);
+							}
 						}
 					}
 					

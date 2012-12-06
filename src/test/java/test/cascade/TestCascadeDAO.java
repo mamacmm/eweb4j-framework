@@ -261,7 +261,6 @@ public class TestCascadeDAO {
 		//master.cascade().remove("pets");
 	}
 	
-	@Test
 	public void testManyOne(){
 		
 	}

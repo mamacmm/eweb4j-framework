@@ -1,11 +1,15 @@
 package test;
 
-import javax.persistence.CascadeType;
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.eweb4j.orm.Model;
+
+import test.po.Pet;
 
 @Entity
 @Table(name = "t_user")
@@ -13,9 +17,11 @@ public class User extends Model<User> {
 	
 	public final static User inst = new User();
 	
-	@ManyToOne(cascade={CascadeType.ALL})
 	private String account;
 	private String password;
+	
+	@OneToMany(mappedBy="user")
+	private List<Pet> pets = new ArrayList<Pet>();
 
 	public String getAccount() {
 		return account;
@@ -31,6 +37,14 @@ public class User extends Model<User> {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public List<Pet> getPets() {
+		return pets;
+	}
+
+	public void setPets(List<Pet> pets) {
+		this.pets = pets;
 	}
 
 	@Override

@@ -7,21 +7,20 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.apache.commons.fileupload.ProgressListener;
-
 @Inherited
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD})
 public @interface Upload {
 	
-	String maxRequestSize() default "";//允许上传文件最大大小 default 4M
+	String maxRequestSize() default "4M";//允许一次上传总共的文件最大大小 default 4M
 	
-	String maxMemorySize() default "";//硬盘缓冲 default 4K
+	String maxMemorySize() default "4K";//硬盘缓冲 default 4K
+	
+	String maxFileSize() default "1M";//允许每个文件最大大小 default 1M
 	
 	String tmpDir() default "" ;//临时目录
 	
-	Class<? extends ProgressListener> listener() default ProgressListener.class;
-	
 	String[] suffix();
+	
 }

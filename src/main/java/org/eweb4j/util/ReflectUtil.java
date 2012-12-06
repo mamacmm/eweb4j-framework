@@ -167,6 +167,8 @@ public class ReflectUtil {
 	 * @return
 	 */
 	public Field getField(String name) {
+		if (name == null)
+			return null;
 		Field result = null;
 		try {
 			Field[] fs = this.getFields();

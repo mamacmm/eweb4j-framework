@@ -63,7 +63,7 @@ public class DAOImpl implements DAO {
 	private Set<String> fetch = new HashSet<String>();
 	private List<String> updateFields = new ArrayList<String>();
 
-	private Map<String, String> aliasMap = new HashMap<String, String>();
+	private Map<String, _AliasField> aliasMap = new HashMap<String, _AliasField>();
 
 	public DAOImpl(String dsName) {
 		this.dsName = dsName;
@@ -96,6 +96,8 @@ public class DAOImpl implements DAO {
 		if (selectAllColumn == null || selectAllColumn.trim().length() == 0)
 			selectAllColumn = "*";
 		
+		if (ORMConfigBeanUtil.getIdField(clazz) == null)
+			return ;
 		this.buffer.put("orderField", ORMConfigBeanUtil.getIdField(clazz));
 		this.buffer.put("orderType", OrderType.DESC_ORDER);
 	}
@@ -119,8 +121,10 @@ public class DAOImpl implements DAO {
 	}
 
 	public DAO append(String query) {
-		String _fieldName = handleFieldAlias(query);
-		String column = ORMConfigBeanUtil.getColumn(clazz, _fieldName);
+		Map<String, Object> map = handleFieldAlias(query);
+		String _fieldName = (String)map.get("field");
+		Class<?> cls = (Class<?>)map.get("class");
+		String column = ORMConfigBeanUtil.getColumn(cls, _fieldName);
 		if (column == null)
 			column = query;
 
@@ -131,28 +135,43 @@ public class DAOImpl implements DAO {
 	}
 	
 	public DAO field(String fieldName) {
-		String _fieldName = handleFieldAlias(fieldName);
-		String column = ORMConfigBeanUtil.getColumn(clazz, _fieldName);
+		Map<String, Object> map = handleFieldAlias(fieldName);
+		String _fieldName = (String)map.get("field");
+		Class<?> cls = (Class<?>)map.get("class");
+		
+		String column = ORMConfigBeanUtil.getColumn(cls, _fieldName);
+		
 		this.condition.append(" ").append(column).append(" ");
 		return this;
 	}
 
-	private String handleFieldAlias(String fieldName) {
+	private Map<String, Object> handleFieldAlias(String fieldName) {
+		Map<String, Object> result = new HashMap<String, Object>(2);
+		result.put("field", fieldName);
+		result.put("class", this.clazz);
 		int dotIndex = fieldName.indexOf(".");
 		if (dotIndex > 0 && dotIndex < fieldName.length() -1){
 			String[] dots = fieldName.split("\\.");
 			StringBuilder builder = new StringBuilder();
+			Class<?> lastCls = null;
 			for (String dot : dots){
-				if (aliasMap.containsKey(dot))
-					dot = aliasMap.get(dot);
-				if (builder.length() > 0)
+				if (aliasMap.containsKey(dot)){
+					_AliasField a = aliasMap.get(dot);
+					dot = a.getField();
+					lastCls = a.getCls(); 
+				}if (builder.length() > 0)
 					builder.append(".");
+				
 				builder.append(dot);
 			}
-			if (builder.length() > 0)
+			if (builder.length() > 0){
 				fieldName = builder.toString();
+				result.put("field", fieldName);
+				result.put("class", lastCls);
+			}
 		}
-		return fieldName;
+		
+		return result;
 	}
 
 	public DAO notLike(Object value) {
@@ -160,8 +179,13 @@ public class DAOImpl implements DAO {
 		
 		if (!this.express)
 			condition.append("'").append(value).append("' ");
-		else
-			condition.append(ORMConfigBeanUtil.getColumn(clazz, handleFieldAlias(String.valueOf(value))));
+		else{
+			Map<String, Object> map = handleFieldAlias(String.valueOf(value));
+			String _fieldName = (String)map.get("field");
+			Class<?> cls = (Class<?>)map.get("class");
+			
+			condition.append(ORMConfigBeanUtil.getColumn(cls, _fieldName));
+		}
 		
 		return this;
 	}
@@ -171,8 +195,13 @@ public class DAOImpl implements DAO {
 		
 		if (!this.express)
 			condition.append("'").append(value).append("' ");
-		else
-			condition.append(ORMConfigBeanUtil.getColumn(clazz, handleFieldAlias(String.valueOf(value))));
+		else{
+			Map<String, Object> map = handleFieldAlias(String.valueOf(value));
+			String _fieldName = (String)map.get("field");
+			Class<?> cls = (Class<?>)map.get("class");
+			
+			condition.append(ORMConfigBeanUtil.getColumn(cls, _fieldName));
+		}
 		
 		return this;
 	}
@@ -182,8 +211,13 @@ public class DAOImpl implements DAO {
 		
 		if (!this.express)
 			condition.append("'").append(value).append("' ");
-		else
-			condition.append(ORMConfigBeanUtil.getColumn(clazz, handleFieldAlias(String.valueOf(value))));
+		else{
+			Map<String, Object> map = handleFieldAlias(String.valueOf(value));
+			String _fieldName = (String)map.get("field");
+			Class<?> cls = (Class<?>)map.get("class");
+			
+			condition.append(ORMConfigBeanUtil.getColumn(cls, _fieldName));
+		}
 		
 		return this;
 	}
@@ -193,8 +227,13 @@ public class DAOImpl implements DAO {
 		
 		if (!this.express)
 			condition.append("'").append(value).append("' ");
-		else
-			condition.append(ORMConfigBeanUtil.getColumn(clazz, handleFieldAlias(String.valueOf(value))));
+		else {
+			Map<String, Object> map = handleFieldAlias(String.valueOf(value));
+			String _fieldName = (String)map.get("field");
+			Class<?> cls = (Class<?>)map.get("class");
+			
+			condition.append(ORMConfigBeanUtil.getColumn(cls, _fieldName));
+		}
 		
 		return this;
 	}
@@ -204,29 +243,45 @@ public class DAOImpl implements DAO {
 		
 		if (!this.express)
 			condition.append("'").append(value).append("' ");
-		else
-			condition.append(ORMConfigBeanUtil.getColumn(clazz, handleFieldAlias(String.valueOf(value))));
+		else {
+			Map<String, Object> map = handleFieldAlias(String.valueOf(value));
+			if (map == null)
+				return this;
+			
+			String _fieldName = (String)map.get("field");
+			Class<?> cls = (Class<?>)map.get("class");
+			condition.append(ORMConfigBeanUtil.getColumn(cls, _fieldName));
+		}
 		
 		return this;
 	}
 
 	public DAO or(String fieldName) {
-		String _fieldName = handleFieldAlias(fieldName);
-		String column = ORMConfigBeanUtil.getColumn(clazz, _fieldName);
+		Map<String, Object> map = handleFieldAlias(fieldName);
+		String _fieldName = (String)map.get("field");
+		Class<?> cls = (Class<?>)map.get("class");
+		
+		String column = ORMConfigBeanUtil.getColumn(cls, _fieldName);
 		this.condition.append(" OR ").append(column).append(" ");
 		return this;
 	}
 
 	public DAO and(String fieldName) {
-		String _fieldName = handleFieldAlias(fieldName);
-		String column = ORMConfigBeanUtil.getColumn(clazz, _fieldName);
+		Map<String, Object> map = handleFieldAlias(fieldName);
+		String _fieldName = (String)map.get("field");
+		Class<?> cls = (Class<?>)map.get("class");
+		String column = ORMConfigBeanUtil.getColumn(cls, _fieldName);
+		
 		this.condition.append(" AND ").append(column).append(" ");
 		return this;
 	}
 
 	public DAO orderBy(String fieldName) {
-		String _fieldName = handleFieldAlias(fieldName);
-		String column = ORMConfigBeanUtil.getColumn(clazz, _fieldName);
+		Map<String, Object> map = handleFieldAlias(fieldName);
+		String _fieldName = (String)map.get("field");
+		Class<?> cls = (Class<?>)map.get("class");
+		
+		String column = ORMConfigBeanUtil.getColumn(cls, _fieldName);
 		this.orderStr = " ORDER BY " + column;
 		this.buffer.put("orderField", column);
 		return this;
@@ -245,8 +300,11 @@ public class DAOImpl implements DAO {
 	}
 	
 	public DAO order(String fieldName, String orderType){
-		String _fieldName = handleFieldAlias(fieldName);
-		String column = ORMConfigBeanUtil.getColumn(clazz, _fieldName);
+		Map<String, Object> map = handleFieldAlias(fieldName);
+		String _fieldName = (String)map.get("field");
+		Class<?> cls = (Class<?>)map.get("class");
+		
+		String column = ORMConfigBeanUtil.getColumn(cls, _fieldName);
 		this.orderStr = " ORDER BY " + column + " DESC ";
 		this.buffer.put("orderField", column);
 		if ("asc".equalsIgnoreCase(orderType))
@@ -258,8 +316,11 @@ public class DAOImpl implements DAO {
 	}
 	
 	public DAO desc(String fieldName) {
-		String _fieldName = handleFieldAlias(fieldName);
-		String column = ORMConfigBeanUtil.getColumn(clazz, _fieldName);
+		
+		Map<String, Object> map = handleFieldAlias(fieldName);
+		String _fieldName = (String)map.get("field");
+		Class<?> cls = (Class<?>)map.get("class");
+		String column = ORMConfigBeanUtil.getColumn(cls, _fieldName);
 		this.orderStr = " ORDER BY " + column + " DESC ";
 		this.buffer.put("orderField", column);
 		this.buffer.put("orderType", OrderType.DESC_ORDER);
@@ -267,8 +328,12 @@ public class DAOImpl implements DAO {
 	}
 
 	public DAO asc(String fieldName) {
-		String _fieldName = handleFieldAlias(fieldName);
-		String column = ORMConfigBeanUtil.getColumn(clazz, _fieldName);
+		Map<String, Object> map = handleFieldAlias(fieldName);
+		String _fieldName = (String)map.get("field");
+		Class<?> cls = (Class<?>)map.get("class");
+		
+		String column = ORMConfigBeanUtil.getColumn(cls, _fieldName);
+		
 		this.orderStr = " ORDER BY " + column + " ASC ";
 		this.buffer.put("orderField", column);
 		this.buffer.put("orderType", OrderType.ASC_ORDER);
@@ -334,7 +399,8 @@ public class DAOImpl implements DAO {
 				select.setTable(table + ", " + sb.toString());
 			}
 			select.setSelectAllColumn(this.selectAllColumn);
-			_sql = select.divPage(page, length, orderField, oType, query.replace("WHERE", ""));
+			Map<String, Object> a = this.handleFieldAlias(orderField);
+			_sql = select.divPage(page, length, orderField, (Class<?>)a.get("class"), oType, query.replace("WHERE", ""));
 		} catch (Exception e) {
 			String _table = table;
 			if (joins != null && !joins.isEmpty()){
@@ -552,11 +618,10 @@ public class DAOImpl implements DAO {
 	}
 
 	public int execute() {
-		int id = -1;
+		int rs = 0;
 		String sql = this.sql.toString().replace("${_where_}", this.condition.toString()).replace("'?'", "?");
 		DataSource ds = DataSourceWrapCache.get(dsName);
 		try {
-			int rs = 0;
 			if (args != null && args.size() > 0) {
 				rs = (Integer) JdbcUtil.updateWithArgs(ds.getConnection(), sql, args.toArray(new Object[] {}));
 			} else {
@@ -573,9 +638,11 @@ public class DAOImpl implements DAO {
 						map.put("idColumn", "id");
 					}
 
-					id = (Integer) DAOUtil.selectMaxId(map, ds.getConnection(),dbType);
+					Number id = DAOUtil.selectMaxId(map, ds.getConnection(),dbType);
+					return id == null ? 0 : id.intValue();
 				} else {
-					id = (Integer) DAOUtil.selectMaxId(clazz,ds.getConnection(), dbType);
+					Number id = DAOUtil.selectMaxId(clazz,ds.getConnection(), dbType);
+					return id == null ? 0 : id.intValue();
 				}
 			}
 
@@ -585,7 +652,7 @@ public class DAOImpl implements DAO {
 		}
 
 		//this.clear();
-		return id;
+		return rs;
 	}
 
 	public DAO update(String... fields) {
@@ -688,8 +755,12 @@ public class DAOImpl implements DAO {
 		for (String field : fields) {
 			if (sb.length() > 0)
 				sb.append(", ");
-			String _field = handleFieldAlias(field);
-			String col = ORMConfigBeanUtil.getColumn(clazz, _field);
+
+			Map<String, Object> map = handleFieldAlias(field);
+			String _fieldName = (String)map.get("field");
+			Class<?> cls = (Class<?>)map.get("class");
+			
+			String col = ORMConfigBeanUtil.getColumn(cls, _fieldName);
 			sb.append(col);
 		}
 		this.sql.append(" SELECT ").append(sb.toString())
@@ -703,8 +774,13 @@ public class DAOImpl implements DAO {
 		
 		if (!this.express)
 			condition.append("'").append(value).append("%' ");
-		else
-			condition.append(ORMConfigBeanUtil.getColumn(clazz, handleFieldAlias(String.valueOf(value))));
+		else{
+			Map<String, Object> map = handleFieldAlias(String.valueOf(value));
+			String _fieldName = (String)map.get("field");
+			Class<?> cls = (Class<?>)map.get("class");
+			
+			condition.append(ORMConfigBeanUtil.getColumn(cls, _fieldName));
+		}
 		
 		return this;
 	}
@@ -714,8 +790,13 @@ public class DAOImpl implements DAO {
 		
 		if (!this.express)
 			condition.append("'%").append(value).append("' ");
-		else
-			condition.append(ORMConfigBeanUtil.getColumn(clazz, handleFieldAlias(String.valueOf(value))));
+		else {
+			Map<String, Object> map = handleFieldAlias(String.valueOf(value));
+			String _fieldName = (String)map.get("field");
+			Class<?> cls = (Class<?>)map.get("class");
+			
+			condition.append(ORMConfigBeanUtil.getColumn(cls, _fieldName));
+		}
 		
 		return this;
 	}
@@ -725,8 +806,13 @@ public class DAOImpl implements DAO {
 		
 		if (!this.express)
 			condition.append("'%").append(value).append("%' ");
-		else
-			condition.append(ORMConfigBeanUtil.getColumn(clazz, handleFieldAlias(String.valueOf(value))));
+		else {
+			Map<String, Object> map = handleFieldAlias(String.valueOf(value));
+			String _fieldName = (String)map.get("field");
+			Class<?> cls = (Class<?>)map.get("class");
+			
+			condition.append(ORMConfigBeanUtil.getColumn(cls, _fieldName));
+		}
 		
 		return this;
 	}
@@ -735,8 +821,10 @@ public class DAOImpl implements DAO {
 		this.sql = null;
 		this.sql = new StringBuilder();
 		this.buffer.clear();
-		this.buffer.put("orderField", ORMConfigBeanUtil.getIdField(clazz));
-		this.buffer.put("orderType", OrderType.DESC_ORDER);
+		if (ORMConfigBeanUtil.getIdField(clazz) != null){
+			this.buffer.put("orderField", ORMConfigBeanUtil.getIdField(clazz));
+			this.buffer.put("orderType", OrderType.DESC_ORDER);
+		}
 		this.condition = null;
 		this.condition = new StringBuilder();
 		this.args.clear();
@@ -765,8 +853,13 @@ public class DAOImpl implements DAO {
 
 			if (!this.express)
 				sb.append("'").append(o).append("'");
-			else
-				sb.append(ORMConfigBeanUtil.getColumn(clazz, handleFieldAlias(String.valueOf(o))));
+			else {
+				Map<String, Object> map = handleFieldAlias(String.valueOf(o));
+				String _fieldName = (String)map.get("field");
+				Class<?> cls = (Class<?>)map.get("class");
+				
+				sb.append(ORMConfigBeanUtil.getColumn(cls, _fieldName));
+			}
 		}
 
 		this.condition.append(sb.toString());
@@ -789,8 +882,13 @@ public class DAOImpl implements DAO {
 
 			if (!this.express)
 				sb.append("'").append(o).append("'");
-			else
-				sb.append(ORMConfigBeanUtil.getColumn(clazz, handleFieldAlias(String.valueOf(o))));
+			else {
+				Map<String, Object> map = handleFieldAlias(String.valueOf(o));
+				String _fieldName = (String)map.get("field");
+				Class<?> cls = (Class<?>)map.get("class");
+				
+				sb.append(ORMConfigBeanUtil.getColumn(cls, _fieldName));
+			}
 		}
 
 		this.condition.append(sb.toString());
@@ -901,7 +999,8 @@ public class DAOImpl implements DAO {
 	public DAO alias(String alias){
 		if (alias == null || alias.trim().length() == 0)
 			return this;
-		this.aliasMap.put(alias, this.clazz.getSimpleName().toLowerCase());
+		_AliasField a = new _AliasField(alias, clazz.getSimpleName().toLowerCase(), clazz);
+		this.aliasMap.put(alias, a);
 		return this;
 	}
 
@@ -923,12 +1022,11 @@ public class DAOImpl implements DAO {
 				if (cls == null)
 					throw new Exception("can not get the field->"+fieldName+" class");
 				if (!ORMConfigBeanCache.containsKey(cls.getName()))
-					throw new Exception("field->" + fieldName + cls.getName() + " is not a entity");
-				
+					throw new Exception("field->" + fieldName + " of " +cls.getName() + " is not entity");
 				String table = ORMConfigBeanUtil.getTable(cls, true);
-				
 				joins.add(table);
-				aliasMap.put(alias, fieldName);
+				_AliasField a = new _AliasField(alias, cls.getSimpleName().toLowerCase(), cls);
+				aliasMap.put(alias, a);
 				currentClazz = cls;
 			} catch (Exception e){
 				log.error(e.toString());
@@ -946,8 +1044,11 @@ public class DAOImpl implements DAO {
 
 		StringBuilder builder = new StringBuilder();
 		for (String field : fieldNames){
-			String _field = handleFieldAlias(field);
-			String col = ORMConfigBeanUtil.getColumn(clazz, _field);
+			Map<String, Object> map = handleFieldAlias(field);
+			String _fieldName = (String)map.get("field");
+			Class<?> cls = (Class<?>)map.get("class");
+			
+			String col = ORMConfigBeanUtil.getColumn(cls, _fieldName);
 			if (builder.length() > 0)
 				builder.append(", ");
 			builder.append(col);
@@ -1001,11 +1102,49 @@ public class DAOImpl implements DAO {
 		
 		if (!this.express)
 			condition.append("'").append(value).append("' ");
-		else
-			condition.append(ORMConfigBeanUtil.getColumn(clazz, handleFieldAlias(String.valueOf(value))));
+		else {
+			Map<String, Object> map = handleFieldAlias(String.valueOf(value));
+			String _fieldName = (String)map.get("field");
+			Class<?> cls = (Class<?>)map.get("class");
+			
+			condition.append(ORMConfigBeanUtil.getColumn(cls, _fieldName));
+		}
 		
 		return this;
 	}
 	
-	
+	private static class _AliasField{
+		private String alias;
+		private String field;
+		private Class<?> cls;
+		
+		public _AliasField() {
+			super();
+		}
+		
+		public _AliasField(String alias, String field, Class<?> cls) {
+			super();
+			this.alias = alias;
+			this.field = field;
+			this.cls = cls;
+		}
+		public String getAlias() {
+			return alias;
+		}
+		public void setAlias(String alias) {
+			this.alias = alias;
+		}
+		public String getField() {
+			return field;
+		}
+		public void setField(String field) {
+			this.field = field;
+		}
+		public Class<?> getCls() {
+			return cls;
+		}
+		public void setCls(Class<?> cls) {
+			this.cls = cls;
+		}
+	}
 }

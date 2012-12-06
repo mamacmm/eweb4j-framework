@@ -21,9 +21,8 @@ import org.eweb4j.orm.config.ORMConfigBeanUtil;
 import org.eweb4j.orm.config.bean.ORMConfigBean;
 import org.eweb4j.orm.config.bean.Property;
 import org.eweb4j.util.ClassUtil;
-import org.eweb4j.util.FileUtil;
-import org.eweb4j.util.ReflectUtil;
 import org.eweb4j.util.CommonUtil;
+import org.eweb4j.util.ReflectUtil;
 
 /**
  * 
@@ -34,7 +33,7 @@ public class Model2Table {
 
 	final static String create_table_script = "\nDROP TABLE IF EXISTS %s;\nCREATE TABLE %s(\n%s \n) ENGINE=InnoDB DEFAULT CHARSET=utf8;\n"; 
 	
-	public static String write(String dataBase) {
+	public static String write(final String dataBase) {
 		StringBuilder sql = new StringBuilder();
 		StringBuilder manyMany = new StringBuilder();
 		for (Iterator<Entry<Object, ORMConfigBean>> it = ORMConfigBeanCache.entrySet().iterator(); it.hasNext();) {
@@ -178,17 +177,13 @@ public class Model2Table {
 		
 		File file = new File(ConfigConstant.CONFIG_BASE_PATH()+ dataBase + "-create.sql");
 		try {
-			boolean flag = FileUtil.createFile(file, true);
-			if (!flag)
-				return "can not create file -> " + file.getAbsolutePath();
 			
 			FileWriter writer = new FileWriter(file);
 			// "DROP DATABASE IF EXISTS %s;\nCREATE DATABASE %s DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;\n"
-			String script = "SET FOREIGN_KEY_CHECKS=0;\n%s";
-			writer.write(String.format(script, sql.toString()));
+			String script = String.format("SET FOREIGN_KEY_CHECKS=0;\n%s", sql.toString());
+			writer.write(script);
 			writer.flush();
 			writer.close();
-			
 			LogFactory.getConfigLogger(Model2Table.class).debug("create models sql script file success -> " + file.getAbsoluteFile());
 			
 		} catch (IOException e1) {

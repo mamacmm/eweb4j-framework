@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 import javax.persistence.Table;
 
 import org.eweb4j.mvc.validator.annotation.Enumer;
@@ -31,6 +32,7 @@ public class Master extends Model<Master> {
 	private String gender;
 
 	@OneToMany
+	@OrderBy("num ASC")
 	private List<Pet> pets = new ArrayList<Pet>();
 
 	public String getName() {

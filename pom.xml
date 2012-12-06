@@ -4,7 +4,7 @@
 
 	<groupId>org.eweb4j</groupId>
 	<artifactId>eweb4j-all</artifactId>
-	<version>1.9.1-SNAPSHOT</version>
+	<version>1.9.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>eweb4j-all</name>
@@ -60,6 +60,8 @@
 		</plugins>
 	</reporting>
 	<dependencies>
+		<!--dependency> <groupId>com.jhlabs</groupId> <artifactId>filters</artifactId> 
+			<version>2.0.235</version> </dependency -->
 		<dependency>
 			<groupId>net.coobird</groupId>
 			<artifactId>thumbnailator</artifactId>
@@ -160,9 +162,20 @@
 	</distributionManagement>
 	<build>
 		<plugins>
-			<!--plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-gpg-plugin</artifactId> 
-				<version>1.4</version> <executions> <execution> <id>sign-artifacts</id> <phase>verify</phase> 
-				<goals> <goal>sign</goal> </goals> </execution> </executions> </plugin -->
+			<!--plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>1.4</version>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-resources-plugin</artifactId>

@@ -54,6 +54,8 @@ public abstract class ScanPackage {
 			log.debug("jars -> " + jars);
 			scanJar();
 
+			//all ok
+			onOk();
 		} catch (Exception e) {
 			error = CommonUtil.getExceptionString(e);
 			log.error(error);
@@ -208,4 +210,6 @@ public abstract class ScanPackage {
 	}
 	
 	protected abstract boolean handleClass(String className);
+	
+	protected abstract void onOk() throws Exception;
 }

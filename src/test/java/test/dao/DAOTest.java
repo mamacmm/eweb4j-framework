@@ -14,7 +14,6 @@ import org.eweb4j.orm.dao.DAOFactory;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import test.User;
 import test.po.Master;
 import test.po.Pet;
 
@@ -40,12 +39,13 @@ public class DAOTest {
 //		Collection<Object> ms = DAOFactory.getDAO(Master.class).enableExpress(false).select("*").join("pets").where().field("pet.name").equal("xiaohei").groupBy("pet.name").query();
 //		System.out.println(ms);
 		
-		DAO dao = DAOFactory.getDAO(Master.class);
-		User master = dao
-						.alias("m")
-						.join("pets")
-						.join("pets.user", "p.u")
-						.select(User.class)
+		DAO dao = DAOFactory.getDAO(Pet.class).alias("p");
+		Pet pet = dao
+						.join("master", "m")
+						.join("user", "u")
+						.unfetch("user")
+						.fetch("master")
+						.select(Pet.class)
 						.where()
 							.field("m.name").like("wei")
 							.and("p.name").likeLeft("xiao")
@@ -53,19 +53,23 @@ public class DAOTest {
 						.groupBy("u.account")
 						.queryOne();
 		
-		System.out.println("master->"+master);
-		System.out.println("count->"+dao.count());
+		System.out.println("pet -> "+pet);
+		if (pet != null){
+			System.out.println("master->"+pet.getMaster());
+			System.out.println("count->"+dao.count());
+		}
 		String sql = dao.toSql();
 		
 		List<Map> maps = DAOFactory.getSelectDAO().selectBySQL(Map.class, sql);
-		for (Map<String, Object> map : maps){
-			for (String key : map.keySet()){
-				System.out.println(key + "=>" + map.get(key));
+		if (maps != null) {
+			for (Map<String, Object> map : maps){
+				for (String key : map.keySet()){
+					System.out.println(key + "=>" + map.get(key));
+				}
 			}
 		}
 	}
 	
-	@Test
 	public void testUpdate() throws Exception{
 		int i = DAOFactory.getDAO(Pet.class)
 				.update("name", "age")
@@ -103,7 +107,6 @@ public class DAOTest {
 		// }
 	}
 	
-	@Test
 	public void testDAO(){
 		DAO dao = DAOFactory.getDAO(Pet.class);
 		Pet pet = dao.clear()
