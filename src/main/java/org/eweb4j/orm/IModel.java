@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.eweb4j.orm.dao.DAO;
 
+@SuppressWarnings("all")
 public interface IModel<T> {
 
 	public void setDataSourceName(String dsName) ;

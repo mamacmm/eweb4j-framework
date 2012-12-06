@@ -7,12 +7,11 @@ import org.eweb4j.orm.dao.DAOException;
 import org.eweb4j.orm.dao.DAOFactory;
 import org.eweb4j.orm.jdbc.transaction.Trans;
 import org.eweb4j.orm.jdbc.transaction.Transaction;
-import org.junit.Test;
 
 import test.po.Master;
 import test.po.Pet;
 
-
+@SuppressWarnings("all")
 public class TestCascadeDAO {
 
 	

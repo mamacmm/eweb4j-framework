@@ -9,6 +9,7 @@ import java.awt.image.BufferedImage;
  * @author gloomy fish
  *
  */
+@SuppressWarnings("all")
 public class ContrastFilter extends AbstractBufferedImageOp {
 
 	private float contrast = 1.2f; // default value;
